@@ -240,7 +240,7 @@ class GraphFunction : Graph {
 protected:
 	vector <Edge> sortedEdges;
 
-	void sortEdges(vector <Edge> edges) {
+	void sortEdges(vector <Edge> edges) {//edges - копия переменной this->edges
 		while (!edges.empty()) {
 			pair <Edge, short> minEdge = make_pair(edges[0], 0);
 			for (short i = 1; i < edges.size(); i++)
@@ -249,10 +249,6 @@ protected:
 			sortedEdges.push_back(minEdge.first);
 			edges.erase(edges.begin() + minEdge.second);
 		}
-		
-		cout << "\nСортированные дуги: ";
-		for (short i = 0; i < sortedEdges.size(); i++)
-			cout << "(" << sortedEdges[i].from << ", " << sortedEdges[i].to << ", " << sortedEdges[i].order << ")";
 	}
 
 	void checkCycles() {
@@ -260,6 +256,7 @@ protected:
 	}
 public:
 	GraphFunction(string inFile, string outFile) : Graph(inFile, outFile) {
+		sortEdges(this->edges);	 
 	}
 	~GraphFunction() {//It's destructor
 	}
@@ -283,7 +280,6 @@ int main(int argc, char* argv[]) {
 
 	try {
 		GraphFunction(inFile, outFile);
-		
 	}
 	catch (string& error) {
 		cout << error;
