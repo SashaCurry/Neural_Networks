@@ -239,6 +239,7 @@ public:
 class GraphFunction : Graph {
 protected:
 	vector <Edge> sortedEdges;
+	set <string> errorsCycles;
 
 	void sortEdges(vector <Edge> edges) {//edges - копия переменной this->edges
 		while (!edges.empty()) {
@@ -251,12 +252,29 @@ protected:
 		}
 	}
 
-	void checkCycles() {
-		
+	void checkCycles(int curV, int* usedV) {
+		usedV[curV - 1] = 1;
+		for (short i = 0; i < edges.size(); i++)
+			if (edges[i].from == curV) {
+				if (usedV[edges[i].to - 1] == 1)
+					errorsCycles.insert(string {"Ошибка в строке " + to_string(edges[i].rawTo) + ": в графе существует цикл из-за ребра (" + to_string(edges[i].from) + ", " + to_string(edges[i].to) + ")"});
+				else {
+					checkCycles(edges[i].to, usedV);
+					usedV[edges[i].to - 1] = 0;
+				}
+			}	
 	}
 public:
 	GraphFunction(string inFile, string outFile) : Graph(inFile, outFile) {
-		sortEdges(this->edges);	 
+		//sortEdges(this->edges);
+		int* usedV = new int[vertexes.size()]{};
+		checkCycles(1, usedV);
+		delete[] usedV;
+		if (!errorsCycles.empty())
+			for (string i : errorsCycles)
+				cout << endl << i;
+		else
+			cout << "\nЦиклы отсутствуют!";
 	}
 	~GraphFunction() {//It's destructor
 	}
