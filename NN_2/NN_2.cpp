@@ -321,7 +321,7 @@ public:
 	GraphFunction(string inFile, string outFile = "out.txt") : Graph(inFile, outFile) {
 		int* usedV = new int[*(--vertexes.end())]{};
 		auto i = vertexes.find(0) != vertexes.end() ? ++vertexes.begin() : vertexes.begin();
-		for (i; i != vertexes.end(); i++)
+		for (; i != vertexes.end(); i++)
 			checkCycles(*i, usedV);
 		delete[] usedV;
 
