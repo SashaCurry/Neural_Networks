@@ -300,8 +300,12 @@ protected:
 
 	string createGraphFunction(vector <Edge> edges, int v, int vPrev = 0, string acc = "") {
 		int vNext = findToAndDeleteEdge(edges, v);
-		if (vNext == 0)
-			return acc + to_string(v) + ")";
+		if (vNext == 0) {
+			if (findToAndDeleteEdge(edges, vPrev) == 0)
+				return acc += to_string(v) + ")";
+			else
+				return acc += to_string(v) + ",";
+		}
 
 		acc += to_string(v) + "(";
 		while (vNext != 0) {
