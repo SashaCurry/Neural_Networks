@@ -3,10 +3,49 @@
 #include "vector"
 #include "string"
 #include "set"
+#include "map"
 #include "fstream"
 #include "algorithm"
 
 using namespace std;
+
+const double EXP = 2.71;
+
+class File {
+public:
+	static string read(string inFile) {
+		ifstream fin(inFile);
+		if (!fin.is_open())
+			throw string{ "Файл " + inFile + " не найден! \n" };
+
+		string str = "";
+		for (char el; fin.get(el);)
+			str += el;
+
+		fin.close();
+		return str;
+	}
+
+	static void write(string str, string outFile) {
+		ofstream fout(outFile);
+		if (!fout.is_open())
+			throw string{ "Недостаточно прав для создания файла " + outFile + "!\n" };
+
+		fout << str;
+		fout.close();
+	}
+
+	static void append(string str, string outFile) {
+		ofstream fout(outFile, ios::app);
+		if (!fout.is_open())
+			throw string{ "Файл " + outFile + " не найден! \n" };
+
+		fout << endl << str;
+		fout.close();
+	}
+};
+
+
 
 class Edge {
 public:
@@ -247,7 +286,7 @@ public:
 
 
 
-class GraphFunction : Graph {
+class GraphFunction : protected Graph {
 protected:
 	string graphFunction = "";
 
@@ -330,15 +369,14 @@ public:
 		delete[] usedV;
 
 		if (!errors.empty()) {
-			if (!errors.empty())
-				for (auto i = errors.begin(); i != errors.end(); i++)
-					cout << endl << *i;
+			for (auto i = errors.begin(); i != errors.end(); i++)
+				cout << endl << *i;
 			return;
 		}
 
 		vector <Edge> sortedEdges = sortEdges(this->edges);
-		graphFunction = createGraphFunction(sortedEdges, sortedEdges[0].from);
-		graphFunction.erase(--graphFunction.end());
+		this->graphFunction = createGraphFunction(sortedEdges, sortedEdges[0].from);
+		this->graphFunction.erase(--graphFunction.end());
 	}
 	~GraphFunction() {//It's destructor
 	}
@@ -367,22 +405,88 @@ public:
 
 
 
+class ValueGraphFunction : protected GraphFunction {
+protected:
+	string cmdFile;
+	map <int, string> cmds;
+	double valueGF;
+
+	void getCommands() {
+		unsigned short iStart = 0, twoPoints = 0;
+		string str = File::read(cmdFile) + "\n";
+		for (unsigned short i = 0; i < str.length(); i++) {
+			if (str[i] == ':')
+				twoPoints = i;
+			else if (str[i] == '\n') {
+				this->cmds.insert(make_pair(stoi(str.substr(iStart, iStart - twoPoints)), str.substr(twoPoints + 2, i - twoPoints - 2)));
+				iStart = i + 1;
+			}
+		}
+	}
+
+
+	double pow(double num, int k) {
+		double res = 1;
+		for (unsigned short i = 0; i < k; i++)
+			res *= num;
+		return res;
+	}
+
+
+	double getValue(vector <Edge> edges, int v, int vPrev = 0, double res = 0) {
+		int vNext = findToAndDeleteEdge(edges, v);
+		/*if (vNext == 0) {
+			if (cmds[vPrev] == "+")
+				return res += stoi(cmds[v]);
+			else if (cmds[vPrev] == "*")
+				return res = 0 ? stoi(cmds[v]) : res * stoi(cmds[i]);
+			else if (cmds[vPrev] == "exp")
+				return pow(EXP, res);
+		}*/
+		while (vNext != 0) {
+			res = getValue(edges, vNext, v, res);
+			vNext = findToAndDeleteEdge(edges, v);
+		}
+
+		if (cmds[vPrev] == "+")
+			return res += stoi(cmds[v]);
+		else if (cmds[vPrev] == "*")
+			return res = 0 ? stoi(cmds[v]) : res * stoi(cmds[v]);
+		else if (cmds[vPrev] == "exp")
+			return pow(EXP, res);
+		return 0;
+	}
+public:
+	ValueGraphFunction(string inFile, string cmdFile, string outFile) : GraphFunction(inFile, outFile) {
+		this->cmdFile = cmdFile;
+		getCommands();
+		vector <Edge> sortedEdges = sortEdges(this->edges);
+		this->valueGF = getValue(sortedEdges, sortedEdges[0].from);
+
+		cout << endl << this->graphFunction << endl << this->valueGF;
+	}
+	~ValueGraphFunction() {
+	}
+};
+
+
+
 int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "ru");
 
-	if (argc != 2 && argc != 3) {
+	if (argc != 3 && argc != 4) {
 		cout << "\nНеверно заданы параметры функции! \n";
 		return 0;
 	}
 
 	string inFile = argv[1];
+	string cmdFile = argv[2];
 	string outFile = "out.txt";
 	if (argc == 3)
-		outFile = argv[2];
-
+		outFile = argv[3];
+	
 	try {
-		GraphFunction gFun(inFile);
-		gFun.printGraphFunctionInFile(outFile);
+		ValueGraphFunction valueFun(inFile, cmdFile, outFile);
 	}
 	catch (string& error) {
 		cout << error;
