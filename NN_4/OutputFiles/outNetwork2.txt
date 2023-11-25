@@ -1,0 +1,18 @@
+<network>
+	<layer>
+		<connections>
+			<weight>25</weight>
+			<weight>75</weight>
+		</connections>
+		<connections>
+			<weight>1</weight>
+			<weight>33</weight>
+		</connections>
+	</layer
+	<layer>
+		<connections>
+			<weight>12</weight>
+			<weight>56</weight>
+		</connections>
+	</layer
+</network>
